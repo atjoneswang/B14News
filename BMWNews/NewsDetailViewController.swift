@@ -30,6 +30,8 @@ class NewsDetailViewController: UIViewController, WKNavigationDelegate,UIWebView
                 
         // set navigationItem back bouuton color
         self.navigationController?.navigationBar.tintColor = UIColor.whiteColor()
+        self.navigationController?.toolbarHidden = false
+        self.navigationController?.toolbar.barTintColor = UIColor.darkGrayColor()
         
 		// self.navigationController?.navigationBarHidden = true
 		// let attributes = [NSFontAttributeName: UIFont.fontAwesomeOfSize(20)] as Dictionary!
@@ -72,6 +74,7 @@ class NewsDetailViewController: UIViewController, WKNavigationDelegate,UIWebView
     
     deinit {
         self.webView.removeObserver(self, forKeyPath: "estimatedProgress")
+        self.navigationController?.hidesBarsOnSwipe = false
     }
     
     @IBAction func shareLink(sender: AnyObject) {

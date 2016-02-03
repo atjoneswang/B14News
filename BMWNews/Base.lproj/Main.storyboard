@@ -104,49 +104,36 @@
         <!--News Detail View Controller-->
         <scene sceneID="Eh6-gk-wS4">
             <objects>
-                <viewController id="UjM-7G-Dbs" customClass="NewsDetailViewController" customModule="B14News" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController automaticallyAdjustsScrollViewInsets="NO" id="UjM-7G-Dbs" customClass="NewsDetailViewController" customModule="B14News" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="bIh-9o-5WV"/>
                         <viewControllerLayoutGuide type="bottom" id="pCd-ob-Q2y"/>
                     </layoutGuides>
                     <view key="view" contentMode="scaleToFill" id="U6B-MZ-Hn4">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <rect key="frame" x="0.0" y="0.0" width="375" height="623"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="dD8-Nz-4xQ">
                                 <rect key="frame" x="0.0" y="64" width="375" height="2"/>
                             </progressView>
-                            <toolbar opaque="NO" clipsSubviews="YES" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="vjW-Ks-N9P">
-                                <rect key="frame" x="0.0" y="623" width="375" height="44"/>
-                                <constraints>
-                                    <constraint firstAttribute="height" constant="44" id="pFj-6U-1a0"/>
-                                </constraints>
-                                <items>
-                                    <barButtonItem systemItem="action" id="h23-YA-6jU">
-                                        <color key="tintColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                        <connections>
-                                            <action selector="shareLink:" destination="UjM-7G-Dbs" id="HBO-sq-Uog"/>
-                                        </connections>
-                                    </barButtonItem>
-                                </items>
-                                <color key="barTintColor" white="0.33333333333333331" alpha="1" colorSpace="calibratedWhite"/>
-                                <connections>
-                                    <outlet property="delegate" destination="UjM-7G-Dbs" id="l2l-Kq-4Lk"/>
-                                </connections>
-                            </toolbar>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
                             <constraint firstAttribute="trailing" secondItem="dD8-Nz-4xQ" secondAttribute="trailing" id="4ZS-KZ-cvl"/>
-                            <constraint firstAttribute="trailing" secondItem="vjW-Ks-N9P" secondAttribute="trailing" id="DpX-IY-4vB"/>
-                            <constraint firstItem="pCd-ob-Q2y" firstAttribute="top" secondItem="vjW-Ks-N9P" secondAttribute="bottom" id="IId-Pg-euQ"/>
                             <constraint firstItem="dD8-Nz-4xQ" firstAttribute="leading" secondItem="U6B-MZ-Hn4" secondAttribute="leading" id="Iad-RU-nL8"/>
-                            <constraint firstItem="vjW-Ks-N9P" firstAttribute="leading" secondItem="U6B-MZ-Hn4" secondAttribute="leading" id="Lh5-Wp-BGT"/>
                             <constraint firstItem="dD8-Nz-4xQ" firstAttribute="top" secondItem="bIh-9o-5WV" secondAttribute="bottom" id="PL0-cR-YWp"/>
                         </constraints>
                     </view>
                     <extendedEdge key="edgesForExtendedLayout" top="YES"/>
-                    <toolbarItems/>
+                    <toolbarItems>
+                        <barButtonItem systemItem="action" id="h23-YA-6jU">
+                            <color key="tintColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                            <connections>
+                                <action selector="shareLink:" destination="UjM-7G-Dbs" id="HBO-sq-Uog"/>
+                            </connections>
+                        </barButtonItem>
+                        <barButtonItem title="Item" id="Om4-hu-i7v"/>
+                    </toolbarItems>
                     <navigationItem key="navigationItem" id="e7G-O0-Iyc">
                         <barButtonItem key="rightBarButtonItem" systemItem="refresh" id="F6t-km-xpz">
                             <color key="tintColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
@@ -155,6 +142,7 @@
                             </connections>
                         </barButtonItem>
                     </navigationItem>
+                    <simulatedToolbarMetrics key="simulatedBottomBarMetrics" barStyle="black"/>
                     <connections>
                         <outlet property="progressBar" destination="dD8-Nz-4xQ" id="eL7-WW-m3m"/>
                         <outlet property="refreshButton" destination="F6t-km-xpz" id="Hjn-oh-uzX"/>
