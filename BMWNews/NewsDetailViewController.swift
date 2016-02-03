@@ -26,12 +26,12 @@ class NewsDetailViewController: UIViewController, WKNavigationDelegate,UIWebView
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        self.navigationController?.hidesBarsOnSwipe = true
+        
                 
         // set navigationItem back bouuton color
-        self.navigationController?.navigationBar.tintColor = UIColor.whiteColor()
-        self.navigationController?.toolbarHidden = false
-        self.navigationController?.toolbar.barTintColor = UIColor.darkGrayColor()
+        navigationController?.navigationBar.tintColor = UIColor.whiteColor()
+        navigationController?.toolbarHidden = false
+        navigationController?.toolbar.barTintColor = UIColor.darkGrayColor()
         
 		// self.navigationController?.navigationBarHidden = true
 		// let attributes = [NSFontAttributeName: UIFont.fontAwesomeOfSize(20)] as Dictionary!
@@ -60,6 +60,7 @@ class NewsDetailViewController: UIViewController, WKNavigationDelegate,UIWebView
         if (keyPath == "estimatedProgress") {
             progressBar.hidden = webView.estimatedProgress == 1
             refreshButton.enabled = webView.estimatedProgress == 1
+            navigationController?.hidesBarsOnSwipe = webView.estimatedProgress == 1
             progressBar.setProgress(Float(webView.estimatedProgress), animated: false)
         }
     }
@@ -74,8 +75,14 @@ class NewsDetailViewController: UIViewController, WKNavigationDelegate,UIWebView
     
     deinit {
         self.webView.removeObserver(self, forKeyPath: "estimatedProgress")
-        self.navigationController?.hidesBarsOnSwipe = false
+        
     }
+    
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        navigationController?.toolbarHidden = true
+        navigationController?.hidesBarsOnSwipe = false
+    }
+    
     
     @IBAction func shareLink(sender: AnyObject) {
         let activityViewController = UIActivityViewController(activityItems: [link! as NSString], applicationActivities: nil)

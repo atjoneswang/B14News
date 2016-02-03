@@ -92,6 +92,7 @@
                         </connections>
                     </tableView>
                     <navigationItem key="navigationItem" id="qyv-8L-c1k"/>
+                    <nil key="simulatedBottomBarMetrics"/>
                     <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina47"/>
                     <refreshControl key="refreshControl" opaque="NO" multipleTouchEnabled="YES" contentMode="center" enabled="NO" contentHorizontalAlignment="center" contentVerticalAlignment="center" id="Vs0-BT-GaW">
                         <autoresizingMask key="autoresizingMask"/>
@@ -104,7 +105,7 @@
         <!--News Detail View Controller-->
         <scene sceneID="Eh6-gk-wS4">
             <objects>
-                <viewController automaticallyAdjustsScrollViewInsets="NO" id="UjM-7G-Dbs" customClass="NewsDetailViewController" customModule="B14News" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="UjM-7G-Dbs" customClass="NewsDetailViewController" customModule="B14News" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="bIh-9o-5WV"/>
                         <viewControllerLayoutGuide type="bottom" id="pCd-ob-Q2y"/>
@@ -132,7 +133,6 @@
                                 <action selector="shareLink:" destination="UjM-7G-Dbs" id="HBO-sq-Uog"/>
                             </connections>
                         </barButtonItem>
-                        <barButtonItem title="Item" id="Om4-hu-i7v"/>
                     </toolbarItems>
                     <navigationItem key="navigationItem" id="e7G-O0-Iyc">
                         <barButtonItem key="rightBarButtonItem" systemItem="refresh" id="F6t-km-xpz">
@@ -142,7 +142,7 @@
                             </connections>
                         </barButtonItem>
                     </navigationItem>
-                    <simulatedToolbarMetrics key="simulatedBottomBarMetrics" barStyle="black"/>
+                    <simulatedToolbarMetrics key="simulatedBottomBarMetrics"/>
                     <connections>
                         <outlet property="progressBar" destination="dD8-Nz-4xQ" id="eL7-WW-m3m"/>
                         <outlet property="refreshButton" destination="F6t-km-xpz" id="Hjn-oh-uzX"/>
@@ -158,6 +158,7 @@
                 <navigationController automaticallyAdjustsScrollViewInsets="NO" id="ZgM-Br-awc" sceneMemberID="viewController">
                     <toolbarItems/>
                     <simulatedStatusBarMetrics key="simulatedStatusBarMetrics" statusBarStyle="lightContent"/>
+                    <nil key="simulatedBottomBarMetrics"/>
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="5DY-PC-Rqd">
                         <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
                         <autoresizingMask key="autoresizingMask"/>
