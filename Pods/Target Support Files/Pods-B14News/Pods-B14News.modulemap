@@ -1,0 +1,6 @@
+framework module Pods_B14News {
+  umbrella header "Pods-B14News-umbrella.h"
+
+  export *
+  module * { export * }
+}

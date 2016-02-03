@@ -1,0 +1,42 @@
+PODS:
+  - Alamofire (3.1.5)
+  - BTNavigationDropdownMenu (0.2.1)
+  - FontAwesome.swift (0.7.0)
+  - Kanna (1.0.4)
+  - ReachabilitySwift (2.3.3)
+  - SwiftyJSON (2.3.2)
+  - SWXMLHash (2.0.2)
+
+DEPENDENCIES:
+  - Alamofire (~> 3.0)
+  - BTNavigationDropdownMenu
+  - FontAwesome.swift
+  - Kanna (~> 1.0.0)
+  - ReachabilitySwift (from `https://github.com/ashleymills/Reachability.swift`)
+  - SwiftyJSON (from `https://github.com/SwiftyJSON/SwiftyJSON.git`)
+  - SWXMLHash (~> 2.0.0)
+
+EXTERNAL SOURCES:
+  ReachabilitySwift:
+    :git: https://github.com/ashleymills/Reachability.swift
+  SwiftyJSON:
+    :git: https://github.com/SwiftyJSON/SwiftyJSON.git
+
+CHECKOUT OPTIONS:
+  ReachabilitySwift:
+    :commit: ec4b33a7e439e5b203b0cae0f71383ca803ad031
+    :git: https://github.com/ashleymills/Reachability.swift
+  SwiftyJSON:
+    :commit: 42bdb102d2624b143c07850ebdc1537d5b6579b6
+    :git: https://github.com/SwiftyJSON/SwiftyJSON.git
+
+SPEC CHECKSUMS:
+  Alamofire: 5f730ba29fd113b7ddd71c1e65d0c630acf5d7b0
+  BTNavigationDropdownMenu: 9cf4060162c96510ee27c388412e28678320cdc0
+  FontAwesome.swift: c6e30a1a81716306ff9c81f2d38dda88ac5b8294
+  Kanna: 537762df5e2203714769f8351340b3c724adb2bd
+  ReachabilitySwift: e0f6b6f280effb47731acfaaa2d5ffe223703793
+  SwiftyJSON: 04ccea08915aa0109039157c7974cf0298da292a
+  SWXMLHash: 9e6bd7db2e8275eaf3d2082265623d6e749e169d
+
+COCOAPODS: 0.39.0
