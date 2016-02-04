@@ -276,9 +276,8 @@ class NewsTableViewController: UITableViewController {
         //cell.newsSource.text = item.source!
         cell.pubDate.text = item.pubdate!
         cell.newsImage.image = nil
-        if item.image != ""{
+        if item.image?.isEmpty == false{
             let imgRequest =  Alamofire.request(.GET, item.image!)
-        
             imgRequest.responseData{ response in
                 cell.newsImage.image = UIImage(data: response.data!)
             }
