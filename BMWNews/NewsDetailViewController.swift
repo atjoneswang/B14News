@@ -16,9 +16,6 @@ class NewsDetailViewController: UIViewController, WKNavigationDelegate,UIWebView
     
     var webView: WKWebView!
     
-    
-    
-    
     @IBOutlet weak var progressBar: UIProgressView!
     
     @IBOutlet weak var refreshButton: UIBarButtonItem!
@@ -26,11 +23,11 @@ class NewsDetailViewController: UIViewController, WKNavigationDelegate,UIWebView
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        
+        navigationController?.toolbarHidden = false
                 
         // set navigationItem back bouuton color
         navigationController?.navigationBar.tintColor = UIColor.whiteColor()
-        navigationController?.toolbarHidden = false
+        
         navigationController?.toolbar.barTintColor = UIColor.darkGrayColor()
         
 		// self.navigationController?.navigationBarHidden = true
@@ -56,12 +53,23 @@ class NewsDetailViewController: UIViewController, WKNavigationDelegate,UIWebView
         }
         
     }
+    
+    override func viewWillDisappear(animated: Bool) {
+        super.viewWillDisappear(animated)
+        
+        navigationController?.toolbarHidden = true
+        navigationController?.hidesBarsOnSwipe = false
+        navigationController?.popToRootViewControllerAnimated(animated)
+        
+    }
+    
     override func observeValueForKeyPath(keyPath: String?, ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
         if (keyPath == "estimatedProgress") {
             progressBar.hidden = webView.estimatedProgress == 1
             refreshButton.enabled = webView.estimatedProgress == 1
+            
             navigationController?.hidesBarsOnSwipe = webView.estimatedProgress == 1
-            progressBar.setProgress(Float(webView.estimatedProgress), animated: false)
+            progressBar.setProgress(Float(webView.estimatedProgress), animated: true)
         }
     }
     
@@ -77,12 +85,6 @@ class NewsDetailViewController: UIViewController, WKNavigationDelegate,UIWebView
         self.webView.removeObserver(self, forKeyPath: "estimatedProgress")
         
     }
-    
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        navigationController?.toolbarHidden = true
-        navigationController?.hidesBarsOnSwipe = false
-    }
-    
     
     @IBAction func shareLink(sender: AnyObject) {
         let activityViewController = UIActivityViewController(activityItems: [link! as NSString], applicationActivities: nil)

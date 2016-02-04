@@ -68,6 +68,7 @@ class NewsTableViewController: UITableViewController {
         selMenu = self.seriesItems[0]
         
         
+        
         // set row automatic height
         self.tableView.rowHeight = UITableViewAutomaticDimension
         self.tableView.estimatedRowHeight = 180.0
@@ -294,6 +295,7 @@ class NewsTableViewController: UITableViewController {
                 // set back button text
                 navigationItem.title = self.selMenu
             }else{
+                navigationItem.title = ""
                 destinationController.link = self.searchableURL
             }
             
