@@ -167,9 +167,11 @@ class NewsTableViewController: UITableViewController {
 					let content = item["content:encoded"].element?.text
 					var imgsrc = ""
 					if let doc = Kanna.HTML(html: content!, encoding: NSUTF8StringEncoding) {
-						for img in doc.xpath("//img") {
-							imgsrc = img["src"]!
-							break
+						if doc.xpath("//img").count > 0 {
+							for img in doc.xpath("//img") {
+								imgsrc = img["src"]!
+								break
+							}
 						}
 					}
 					
