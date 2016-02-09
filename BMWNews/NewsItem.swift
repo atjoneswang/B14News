@@ -18,6 +18,7 @@ class NewsItem{
     var pubdate: String?
     var content: String?
     var description: String?
+    var date: NSDate?
     
     
     init(newstitle: String, newslink:String, newssource: String, newsimage:String, newsdate:String, newsContent:String, desc:String){
@@ -34,6 +35,7 @@ class NewsItem{
         dateFormatter.locale = NSLocale(localeIdentifier: "en_US_POSIX")
         dateFormatter.dateFormat = "EEE, dd MMM yyyy HH:mm:ss ZZZZ"
         let r_date = dateFormatter.dateFromString(newsdate)
+        date = r_date
         var dateString = ""
         if let d = r_date {
             

@@ -10,11 +10,13 @@ import UIKit
 import WebKit
 import FontAwesome_swift
 
+
 class NewsDetailViewController: UIViewController, WKNavigationDelegate,UIWebViewDelegate {
 
     var link:String?
     
     var webView: WKWebView!
+    
     
     @IBOutlet weak var progressBar: UIProgressView!
     
@@ -42,7 +44,7 @@ class NewsDetailViewController: UIViewController, WKNavigationDelegate,UIWebView
         configuration.preferences = preferences
         webView = WKWebView(frame: view.bounds, configuration: configuration)
         webView.addObserver(self, forKeyPath: "estimatedProgress", options: .New, context: nil)
-        //progressBar.hidden = true
+        progressBar.hidden = true
         refreshButton.enabled = false
         view.insertSubview(webView, belowSubview: progressBar)
         
@@ -59,7 +61,8 @@ class NewsDetailViewController: UIViewController, WKNavigationDelegate,UIWebView
         
         navigationController?.toolbarHidden = true
         navigationController?.hidesBarsOnSwipe = false
-        navigationController?.popToRootViewControllerAnimated(animated)
+        
+        //navigationController?.popToRootViewControllerAnimated(animated)
         
     }
     

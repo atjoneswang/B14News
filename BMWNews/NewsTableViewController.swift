@@ -14,60 +14,34 @@ import ReachabilitySwift
 import BTNavigationDropdownMenu
 import CoreSpotlight
 import MobileCoreServices
+import SwiftyJSON
 
 class NewsTableViewController: UITableViewController {
     
-    let seriesItems = ["1 SERIES", "2 SERIES", "3 SERIES", "4 SERIES", "1M", "M2", "M3", "M4"]
-    /*
-    1ser http://www.bimmerfile.com/section/bmw_models/1-series/feed/
-         http://www.bmwblog.com/category/models/bmw-1-series/feed/
-         http://www.bimmerpost.com/1-series/feed/
+    var seriesItems = ["1 SERIES", "2 SERIES", "3 SERIES", "4 SERIES", "1M", "M2", "M3", "M4"]
     
-    2ser http://www.bmwblog.com/category/models/2-series/feed/
-         http://www.bimmerpost.com/2-series/feed/
-         http://www.bimmerfile.com/section/bmw_models/2-series-2/feed/
-    
-    3ser http://www.bmwblog.com/category/models/bmw-3-series/feed/
-         http://www.bimmerfile.com/section/bmw_models/bmw-3-series/feed/
-         http://www.bimmerpost.com/3-series/feed/
-    
-    4ser http://www.bmwblog.com/category/models/bmw-4-series/feed/
-         http://www.bimmerfile.com/section/bmw_models/4-series/feed/
-         http://www.bimmerpost.com/4-series/feed/
-    
-    
-    1M http://www.bmwblog.com/category/models/1-series-m-coupe/feed/
-    1M http://www.bimmerpost.com/1m/feed/
-    http://www.bimmerfile.com/section/bmw_models/m/1m/feed/
-
-    
-    M2 http://www.bmwblog.com/category/models/bmw-m2/feed/
-       http://www.bimmerfile.com/section/bmw_models/m/m2/feed/
-       http://www.bimmerpost.com/m2/feed/
-    
-    M3 http://www.bmwblog.com/category/models/bmw-m3/feed/
-       http://www.bimmerfile.com/section/bmw_models/m/m3/feed/
-       http://www.bimmerpost.com/m3/feed/
-    
-    M4 http://www.bmwblog.com/category/models/bmw-m4/feed/
-       http://www.bimmerfile.com/section/bmw_models/m/m4/feed/
-       http://www.bimmerpost.com/m4/feed/
-
-
-    */
-    //var feedUrl = "http://www.bmwblog.com/category/models/bmw-1-series/feed/"
-    var feedUrl = "http://www.bimmerfile.com/section/bmw_models/1-series/feed/"
     var feedArray = [NewsItem]()
     var selMenu = ""
     var selectedNewsIndex: Int!
     var searchableURL = ""
     
+    var feedJson: JSON = []
+    var feedList = [String]()
+    
+    var tableTopY: Float = 0
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        tableTopY = Float(tableView.contentOffset.y)
+        
+        loadJsonData()
+        //init navbar menu
+        self.seriesItems = self.feedJson["feedmenu"].arrayValue.map{ $0.string!}
         selMenu = self.seriesItems[0]
         
-        
+        //load feed url list
+        self.feedList = self.feedJson[self.selMenu].arrayValue.map{ $0.string!}
         
         // set row automatic height
         self.tableView.rowHeight = UITableViewAutomaticDimension
@@ -82,14 +56,30 @@ class NewsTableViewController: UITableViewController {
         menuView.arrowPadding = 15
         menuView.animationDuration = 0.5
         menuView.didSelectItemAtIndexHandler = {(indexPath: Int) -> () in
-            print("Did select item at index: \(indexPath)")
+            //print("Did select item at index: \(indexPath)")
             self.selMenu = self.seriesItems[indexPath]
+            self.feedList = self.feedJson[self.selMenu].arrayValue.map{ $0.string!}
+            self.requestFeeds(self.feedList)
         }
         menuView.cellBackgroundColor = UIColor(red: 0.5, green: 0.5, blue: 0.5, alpha: 1)
         
         self.navigationItem.titleView = menuView
         //set navigation dropdown menu end
         
+        checkNetWork()
+        
+        self.refreshControl?.addTarget(self, action: "refreshFeed:", forControlEvents: .ValueChanged)
+    }
+    
+    func loadJsonData() {
+        if let path = NSBundle.mainBundle().pathForResource("feed", ofType: "json") {
+            if let data = NSData(contentsOfFile: path) {
+                feedJson = JSON(data: data)
+            }
+        }
+    }
+    
+    func checkNetWork(){
         //check network status
         let reachability: Reachability
         do {
@@ -103,8 +93,7 @@ class NewsTableViewController: UITableViewController {
             // this is called on a background thread, but UI updates must
             // be on the main thread, like this:
             dispatch_async(dispatch_get_main_queue()) {
-                self.requestFeed(self.feedUrl)
-                
+                self.requestFeeds(self.feedList)
             }
         }
         reachability.whenUnreachable = { reachability in
@@ -120,18 +109,14 @@ class NewsTableViewController: UITableViewController {
         } catch {
             self.showNoNetWorkAlert()
         }
-        
-                
-        
-        self.refreshControl?.addTarget(self, action: "refreshFeed:", forControlEvents: .ValueChanged)
+
     }
-    
     func reachabilityChanged(note: NSNotification) {
         
         let reachability = note.object as! Reachability
         
         if reachability.isReachable() {
-            requestFeed(feedUrl)
+            requestFeeds(self.feedList)
             
         } else {
             showNoNetWorkAlert()
@@ -148,20 +133,72 @@ class NewsTableViewController: UITableViewController {
     }
     
     func refreshFeed(refreshControl: UIRefreshControl) {
-        requestFeed(feedUrl)
+        requestFeeds(self.feedList)
         refreshControl.endRefreshing()
     }
     
+    func requestFeeds(urls: [String]) {
+        self.feedArray = [NewsItem]()
+        let group: dispatch_group_t = dispatch_group_create();
+        
+        for url in urls {
+            //requestFeed(url)
+            dispatch_group_enter(group)
+            
+            let requestUrl = url
+            Alamofire.request(.GET, requestUrl).responseString{ response in
+                let feedData = response.result.value
+                
+                if response.result.isSuccess == true && feedData?.isEmpty == false {
+                    let xml = SWXMLHash.parse(feedData!)
+
+                    for item in xml["rss"] ["channel"] ["item"] {
+                        let description = item["description"].element?.text
+                        let content = item["content:encoded"].element?.text
+                        var imgsrc = ""
+                        if let doc = Kanna.HTML(html: content!, encoding: NSUTF8StringEncoding) {
+                            if doc.xpath("//img").count > 0 {
+                                for img in doc.xpath("//img") {
+                                    imgsrc = img["src"]!
+                                    break
+                                }
+                            }
+                        }
+                        
+                        if let newstitle = item["title"].element!.text, newsurl = item["link"].element!.text, pubdate = item["pubDate"].element!.text {
+                            let feed = NewsItem.init(newstitle: newstitle, newslink: newsurl, newssource: "", newsimage: imgsrc, newsdate: pubdate, newsContent: content!, desc: description!)
+                            self.feedArray.append(feed)
+                        }
+                    }
+                    
+                }
+                dispatch_group_leave(group)
+            }
+        }
+        dispatch_group_notify(group, dispatch_get_main_queue()){
+            //print("feed count: \(self.feedArray.count)")
+            self.feedArray.sortInPlace({ $0.date!.compare($1.date!) == NSComparisonResult.OrderedDescending})
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)){
+                //print("start setup searchable content")
+                self.setupSearchableContent(self.feedArray)
+            }
+            self.tableView.reloadData()
+            
+            self.tableView.setContentOffset(CGPointMake(0, 0 - self.tableView.contentInset.top), animated:true)
+        }
+        
+    }
+    
 	func requestFeed(url: String) {
-		
+
 		let feed = Alamofire.request(.GET, url)
-		
-		feed.responseString {response in
+
+		feed.responseString { response in
 			let response = response.result.value
-			
+
 			if response?.isEmpty != true {
 				let xml = SWXMLHash.parse(response!)
-				self.feedArray = [NewsItem]()
+                var feeds = [NewsItem]()
 				for item in xml["rss"] ["channel"] ["item"] {
 					let description = item["description"].element?.text
 					let content = item["content:encoded"].element?.text
@@ -174,34 +211,32 @@ class NewsTableViewController: UITableViewController {
 							}
 						}
 					}
-					
+
 					if let newstitle = item["title"].element!.text, newsurl = item["link"].element!.text, pubdate = item["pubDate"].element!.text {
-                        let feed = NewsItem.init(newstitle: newstitle, newslink: newsurl, newssource: "BMW BLOG", newsimage: imgsrc, newsdate: pubdate, newsContent: content!,desc: description!)
-						self.feedArray.append(feed)
+						let feed = NewsItem.init(newstitle: newstitle, newslink: newsurl, newssource: "", newsimage: imgsrc, newsdate: pubdate, newsContent: content!, desc: description!)
+						feeds.append(feed)
+                        self.feedArray.append(feed)
 					}
-					
 				}
-				
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)){
-                self.setupSearchableContent()
-            }
-				
-				self.tableView.reloadData()
+                
+                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)){
+                    self.setupSearchableContent(feeds)
+                }
 			}
 		}
-		
 	}
     
-    func setupSearchableContent(){
+    func setupSearchableContent(feeds: [NewsItem]){
         var searchableItems = [CSSearchableItem]()
         
-        for i in 0...(self.feedArray.count - 1) {
-            let news = self.feedArray[i]
+        var itemIdex = 0
+        for news in feeds {
+            
             
             let searchableItemAttributeSet = CSSearchableItemAttributeSet(itemContentType: kUTTypeText as String)
             searchableItemAttributeSet.title = news.title!
             
-            let newsImagePath = news.image!
+            let newsImagePath = news.image!.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceCharacterSet())
             if let url = NSURL(string: newsImagePath) {
                 if let data = NSData(contentsOfURL: url){
                     searchableItemAttributeSet.thumbnailData = data
@@ -214,8 +249,9 @@ class NewsTableViewController: UITableViewController {
             
             searchableItemAttributeSet.keywords = keywords
             
-            let searchableItem = CSSearchableItem(uniqueIdentifier: "com.app.b14news.\(i)", domainIdentifier: "bmw", attributeSet: searchableItemAttributeSet)
+            let searchableItem = CSSearchableItem(uniqueIdentifier: "com.app.b14news.\(itemIdex)", domainIdentifier: "bmw", attributeSet: searchableItemAttributeSet)
             searchableItems.append(searchableItem)
+            itemIdex++
         }
         
         CSSearchableIndex.defaultSearchableIndex().indexSearchableItems(searchableItems) {(error) -> Void in
@@ -225,8 +261,10 @@ class NewsTableViewController: UITableViewController {
         }
     }
     
+    
     override func restoreUserActivityState(activity: NSUserActivity) {
         if activity.activityType == CSSearchableItemActionType {
+            
             if let searchURL = activity.webpageURL?.absoluteString {
                 self.searchableURL = searchURL
                 
@@ -243,7 +281,7 @@ class NewsTableViewController: UITableViewController {
             
         }
     }
-    
+
     /*
     override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         selectedNewsIndex = indexPath.row
@@ -269,25 +307,28 @@ class NewsTableViewController: UITableViewController {
     }
 
     
-    override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCellWithIdentifier("cell", forIndexPath: indexPath) as! NewsCell
-        let item = self.feedArray[indexPath.row]
-        cell.newsTitle.text = item.title!
-        //cell.newsSource.text = item.source!
-        cell.pubDate.text = item.pubdate!
-        cell.newsImage.image = nil
-        if item.image?.isEmpty == false{
-            let imgRequest =  Alamofire.request(.GET, item.image!)
-            imgRequest.responseData{ response in
-                cell.newsImage.image = UIImage(data: response.data!)
-            }
-        }
-        return cell
-    }
+	override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
+		let cell = tableView.dequeueReusableCellWithIdentifier("cell", forIndexPath: indexPath) as! NewsCell
+		let item = self.feedArray[indexPath.row]
+		cell.newsTitle.text = item.title!
+		// cell.newsSource.text = item.source!
+		cell.pubDate.text = item.pubdate!
+		cell.newsImage.image = nil
+		if let imagePath = item.image {
+			let imgrequest = Alamofire.request(.GET, imagePath.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceCharacterSet()))
+			imgrequest.responseData { response in
+				if let data = response.data {
+					cell.newsImage.image = UIImage(data: data)
+				}
+			}
+		}
+		return cell
+	}
     
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         if segue.identifier == "showNews" {
             let destinationController = segue.destinationViewController as! NewsDetailViewController
+            
             if let indexPath = self.tableView.indexPathForSelectedRow {
                 
                 self.selectedNewsIndex = indexPath.row
