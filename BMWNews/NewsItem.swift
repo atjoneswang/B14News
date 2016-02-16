@@ -19,15 +19,17 @@ class NewsItem{
     var content: String?
     var description: String?
     var date: NSDate?
+    var imageData: NSData?
     
     
-    init(newstitle: String, newslink:String, newssource: String, newsimage:String, newsdate:String, newsContent:String, desc:String){
+    init(newstitle: String, newslink:String, newssource: String, newsimage:String, newsdate:String, newsContent:String, desc:String, newsimageData: NSData){
         title = newstitle
         link = newslink
         source = newssource
         image = newsimage
         content = newsContent
         description = desc
+        imageData = newsimageData
         // MARK: - check locale time identifier
         //let identifier = NSLocale.currentLocale().localeIdentifier
         let dateFormatter = NSDateFormatter()

@@ -59,6 +59,7 @@ class NewsTableViewController: UITableViewController {
             //print("Did select item at index: \(indexPath)")
             self.selMenu = self.seriesItems[indexPath]
             self.feedList = self.feedJson[self.selMenu].arrayValue.map{ $0.string!}
+            
             self.requestFeeds(self.feedList)
         }
         menuView.cellBackgroundColor = UIColor(red: 0.5, green: 0.5, blue: 0.5, alpha: 1)
@@ -92,9 +93,10 @@ class NewsTableViewController: UITableViewController {
         reachability.whenReachable = { reachability in
             // this is called on a background thread, but UI updates must
             // be on the main thread, like this:
-            dispatch_async(dispatch_get_main_queue()) {
-                self.requestFeeds(self.feedList)
-            }
+            //dispatch_async(dispatch_get_main_queue()) {
+            
+            self.requestFeeds(self.feedList)
+            //}
         }
         reachability.whenUnreachable = { reachability in
             // this is called on a background thread, but UI updates must
@@ -116,8 +118,8 @@ class NewsTableViewController: UITableViewController {
         let reachability = note.object as! Reachability
         
         if reachability.isReachable() {
-            requestFeeds(self.feedList)
             
+            requestFeeds(self.feedList)
         } else {
             showNoNetWorkAlert()
         }
@@ -135,23 +137,32 @@ class NewsTableViewController: UITableViewController {
     func refreshFeed(refreshControl: UIRefreshControl) {
         requestFeeds(self.feedList)
         refreshControl.endRefreshing()
+        
+        
     }
     
     func requestFeeds(urls: [String]) {
-        self.feedArray = [NewsItem]()
-        let group: dispatch_group_t = dispatch_group_create();
+		self.feedArray = [NewsItem]()
         
-        for url in urls {
-            //requestFeed(url)
+        let group = dispatch_group_create()
+        var feeds = [String]()
+        let networkHelper = NetworkHelper()
+		for url in urls {
             dispatch_group_enter(group)
+            networkHelper.getResponseString(url){(result) ->Void in
+                feeds.append(result)
+                dispatch_group_leave(group)
+            }
             
-            let requestUrl = url
-            Alamofire.request(.GET, requestUrl).responseString{ response in
-                let feedData = response.result.value
-                
-                if response.result.isSuccess == true && feedData?.isEmpty == false {
-                    let xml = SWXMLHash.parse(feedData!)
-
+        }
+        
+        dispatch_group_notify(group, dispatch_get_main_queue()) { () -> Void in
+            let processGroup = dispatch_group_create()
+            for feed in feeds {
+                dispatch_group_enter(processGroup)
+                if !(feed.isEmpty) {
+                    let xml = SWXMLHash.parse(feed)
+                    
                     for item in xml["rss"] ["channel"] ["item"] {
                         let description = item["description"].element?.text
                         let content = item["content:encoded"].element?.text
@@ -164,66 +175,41 @@ class NewsTableViewController: UITableViewController {
                                 }
                             }
                         }
+                        var imageData: NSData? = nil
                         
-                        if let newstitle = item["title"].element!.text, newsurl = item["link"].element!.text, pubdate = item["pubDate"].element!.text {
-                            let feed = NewsItem.init(newstitle: newstitle, newslink: newsurl, newssource: "", newsimage: imgsrc, newsdate: pubdate, newsContent: content!, desc: description!)
-                            self.feedArray.append(feed)
+                        if !(imgsrc.isEmpty) {
+                            let imgrequest = Alamofire.request(.GET, imgsrc.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceCharacterSet()))
+                            imgrequest.responseData { response in
+                                if let data = response.data {
+                                    imageData = data
+                                    if let newstitle = item["title"].element!.text, newsurl = item["link"].element!.text, pubdate = item["pubDate"].element!.text {
+                                        let feed = NewsItem(newstitle: newstitle, newslink: newsurl, newssource: "", newsimage: imgsrc, newsdate: pubdate, newsContent: content!, desc: description!, newsimageData: imageData!)
+                                        self.feedArray.append(feed)
+                                        
+                                    }
+                                    
+                                }
+                            }
                         }
+                        
                     }
-                    
+                   dispatch_group_leave(processGroup)
                 }
-                dispatch_group_leave(group)
-            }
-        }
-        dispatch_group_notify(group, dispatch_get_main_queue()){
-            //print("feed count: \(self.feedArray.count)")
-            self.feedArray.sortInPlace({ $0.date!.compare($1.date!) == NSComparisonResult.OrderedDescending})
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)){
-                //print("start setup searchable content")
-                self.setupSearchableContent(self.feedArray)
-            }
-            self.tableView.reloadData()
-            
-            self.tableView.setContentOffset(CGPointMake(0, 0 - self.tableView.contentInset.top), animated:true)
-        }
-        
-    }
-    
-	func requestFeed(url: String) {
-
-		let feed = Alamofire.request(.GET, url)
-
-		feed.responseString { response in
-			let response = response.result.value
-
-			if response?.isEmpty != true {
-				let xml = SWXMLHash.parse(response!)
-                var feeds = [NewsItem]()
-				for item in xml["rss"] ["channel"] ["item"] {
-					let description = item["description"].element?.text
-					let content = item["content:encoded"].element?.text
-					var imgsrc = ""
-					if let doc = Kanna.HTML(html: content!, encoding: NSUTF8StringEncoding) {
-						if doc.xpath("//img").count > 0 {
-							for img in doc.xpath("//img") {
-								imgsrc = img["src"]!
-								break
-							}
-						}
-					}
-
-					if let newstitle = item["title"].element!.text, newsurl = item["link"].element!.text, pubdate = item["pubDate"].element!.text {
-						let feed = NewsItem.init(newstitle: newstitle, newslink: newsurl, newssource: "", newsimage: imgsrc, newsdate: pubdate, newsContent: content!, desc: description!)
-						feeds.append(feed)
-                        self.feedArray.append(feed)
-					}
-				}
                 
-                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)){
-                    self.setupSearchableContent(feeds)
+            }
+            dispatch_group_notify(processGroup, dispatch_get_main_queue()) {
+                self.feedArray.sortInPlace({ $0.date!.compare($1.date!) == NSComparisonResult.OrderedDescending })
+                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) {
+                    // print("start setup searchable content")
+                    self.setupSearchableContent(self.feedArray)
                 }
-			}
-		}
+                self.tableView.reloadData()
+                
+                //self.tableView.setContentOffset(CGPointMake(0, 0 - self.tableView.contentInset.top), animated: true)
+                
+            }
+            
+        }
 	}
     
     func setupSearchableContent(feeds: [NewsItem]){
@@ -314,7 +300,9 @@ class NewsTableViewController: UITableViewController {
 		// cell.newsSource.text = item.source!
 		cell.pubDate.text = item.pubdate!
 		cell.newsImage.image = nil
-		if let imagePath = item.image {
+        cell.newsImage.image = UIImage(data: item.imageData!)
+		/*
+        if let imagePath = item.image {
 			let imgrequest = Alamofire.request(.GET, imagePath.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceCharacterSet()))
 			imgrequest.responseData { response in
 				if let data = response.data {
@@ -322,6 +310,7 @@ class NewsTableViewController: UITableViewController {
 				}
 			}
 		}
+        */
 		return cell
 	}
     
