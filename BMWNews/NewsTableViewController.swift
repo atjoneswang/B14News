@@ -69,7 +69,7 @@ class NewsTableViewController: UITableViewController {
         
         checkNetWork()
         
-        self.refreshControl?.addTarget(self, action: "refreshFeed:", forControlEvents: .ValueChanged)
+        self.refreshControl?.addTarget(self, action: #selector(NewsTableViewController.refreshFeed(_:)), forControlEvents: .ValueChanged)
     }
     
     func loadJsonData() {
@@ -205,7 +205,7 @@ class NewsTableViewController: UITableViewController {
                 }
                 self.tableView.reloadData()
                 
-                //self.tableView.setContentOffset(CGPointMake(0, 0 - self.tableView.contentInset.top), animated: true)
+                // self.tableView.setContentOffset(CGPointMake(0, 0 - self.tableView.contentInset.top), animated: true)
                 
             }
             
@@ -237,7 +237,7 @@ class NewsTableViewController: UITableViewController {
             
             let searchableItem = CSSearchableItem(uniqueIdentifier: "com.app.b14news.\(itemIdex)", domainIdentifier: "bmw", attributeSet: searchableItemAttributeSet)
             searchableItems.append(searchableItem)
-            itemIdex++
+            itemIdex += 1
         }
         
         CSSearchableIndex.defaultSearchableIndex().indexSearchableItems(searchableItems) {(error) -> Void in
