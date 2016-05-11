@@ -144,22 +144,20 @@ class NewsTableViewController: UITableViewController {
     func requestFeeds(urls: [String]) {
 		self.feedArray = [NewsItem]()
         
+        let globalQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
         let group = dispatch_group_create()
         var feeds = [String]()
         let networkHelper = NetworkHelper()
 		for url in urls {
-            dispatch_group_enter(group)
-            networkHelper.getResponseString(url){(result) ->Void in
-                feeds.append(result)
-                dispatch_group_leave(group)
+            dispatch_group_async(group, globalQueue) { () -> Void in
+                networkHelper.getRSSXml(url){(result) ->Void in
+                    feeds.append(result)
+                }
             }
-            
         }
         
-        dispatch_group_notify(group, dispatch_get_main_queue()) { () -> Void in
-            let processGroup = dispatch_group_create()
+        dispatch_group_notify(group, globalQueue) { () -> Void in
             for feed in feeds {
-                dispatch_group_enter(processGroup)
                 if !(feed.isEmpty) {
                     let xml = SWXMLHash.parse(feed)
                     
@@ -193,21 +191,20 @@ class NewsTableViewController: UITableViewController {
                         }
                         
                     }
-                   dispatch_group_leave(processGroup)
                 }
                 
             }
-            dispatch_group_notify(processGroup, dispatch_get_main_queue()) {
-                self.feedArray.sortInPlace({ $0.date!.compare($1.date!) == NSComparisonResult.OrderedDescending })
-                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) {
+            
+            self.feedArray.sortInPlace({ $0.date!.compare($1.date!) == NSComparisonResult.OrderedDescending })
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) {
                     // print("start setup searchable content")
-                    self.setupSearchableContent(self.feedArray)
-                }
-                self.tableView.reloadData()
+                self.setupSearchableContent(self.feedArray)
+            }
+            self.tableView.reloadData()
                 
                 // self.tableView.setContentOffset(CGPointMake(0, 0 - self.tableView.contentInset.top), animated: true)
                 
-            }
+            
             
         }
 	}
