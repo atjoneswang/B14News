@@ -5,8 +5,8 @@ import Alamofire
 import SWXMLHash
 import XCPlayground
 
-
 XCPlaygroundPage.currentPage.needsIndefiniteExecution = true
+
 
 var str = "Hello, playground"
 
@@ -21,81 +21,31 @@ class DownloadBaseOperation : NSOperation {
     var result:String!
 }
 var downloads = [String]()
-let group: dispatch_group_t = dispatch_group_create()
+let globalQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+let group = dispatch_group_create()
 
+let session = NSURLSession.sharedSession()
 for i in 0..<feedURLs.count {
-    dispatch_group_async(group, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) { () -> Void in
+    
         
-        NSLog("proc start")
-        Alamofire.request(.GET, feedURLs[i]).responseString { response in
-            let feedData = response.result.value
-            if feedData?.isEmpty == false {
-                downloads.append(feedData!)
-            }
+        NSLog("proc task \(i) start")
+        let task = session.dataTaskWithURL(NSURL(string: feedURLs[i])!){(data, response, err) -> Void in
+            NSLog("\(i) task done.")
+            let rss = NSString(data: data!, encoding: NSUTF8StringEncoding)!
+            //NSLog(rss as String)
+        //objc_sync_enter(downloads)
+            downloads.append(rss as String)
+        //objc_sync_exit(downloads)
+            
         }
-        NSLog("proc end")
-    }
-}
-
-dispatch_group_notify(group, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) { () -> Void in
-    NSLog("notify")
-    NSLog("\(downloads.count)")
-}
-NSLog("before wait")
-
-dispatch_group_wait(group, DISPATCH_TIME_FOREVER)
-
-NSLog("after wait")
-
-class DownLoadHelper{
-    static func downLoadRSS(url:String){
-        Alamofire.request(.GET, url).responseString { response in
-            let feedData = response.result.value
-            if feedData?.isEmpty == false {
-                downloads.append(feedData!)
-            }
-        }
-    }
-
-}
-
-class DownloadOperation: DownloadBaseOperation {
-    let url:String
     
-    init(url:String) {
-        self.url = url
-    }
+        task.resume()
     
-    override func main() {
-        Alamofire.request(.GET, url).responseString { response in
-            let feedData = response.result.value
-            if feedData?.isEmpty == false {
-                self.result = feedData
-            }
-        }
-    }
+        NSLog("proc task \(i) end")
+    //}
 }
 
-/*
-let queue = NSOperationQueue()
-let downloadOp = DownloadOperation(url: feedUrl)
-let download2p = DownloadOperation(url: feed2Url)
-queue.addOperation(downloadOp)
-queue.addOperation(download2p)
-queue.waitUntilAllOperationsAreFinished()
 
-var feeds = [String]()
 
-for operation in queue.operations {
-    let downloadresult = operation as! DownloadOperation
-    NSLog(downloadresult.result!)
-    feeds.append(downloadresult.result)
-    NSLog(feeds.description)
-}
-queue.addOperationWithBlock({
-    NSOperationQueue.mainQueue().addOperationWithBlock({
-        NSLog("finish")
-    })
-})
-var xmllist = feeds
-*/
+
+

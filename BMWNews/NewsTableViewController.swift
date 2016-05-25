@@ -30,6 +30,8 @@ class NewsTableViewController: UITableViewController {
     
     var tableTopY: Float = 0
     
+    private let networkHelper = NetworkHelper()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -141,27 +143,80 @@ class NewsTableViewController: UITableViewController {
         
     }
     
+    
+    
     func requestFeeds(urls: [String]) {
-		self.feedArray = [NewsItem]()
+		self.feedArray.removeAll()
         
-        let globalQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+        let notified = dispatch_semaphore_create(0)
         let group = dispatch_group_create()
-        var feeds = [String]()
-        let networkHelper = NetworkHelper()
+        let globalQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+        
+        
+        //networkHelper = NetworkHelper()
+        var feedsdata = [String]()
+        /**
+        dispatch_group_enter(group)
+        dispatch_group_async(group, globalQueue) { () -> Void in
+            NSLog("test")
+            
+            self.networkHelper.getRSSXml(urls[0]){(result) ->Void in
+                //dispatch_sync(globalQueue){
+                
+                feedsdata.append(result)
+                dispatch_group_leave(group)
+                //}
+            }
+            
+ 
+        }
+        dispatch_group_enter(group)
+        dispatch_group_async(group, globalQueue) { () -> Void in
+            
+            NSLog("test 2")
+            
+            self.networkHelper.getRSSXml(urls[1]){(result) ->Void in
+                //dispatch_sync(globalQueue){
+                feedsdata.append(result)
+                dispatch_group_leave(group)
+                //}
+            }
+            
+        }
+        **/
+        
 		for url in urls {
+            dispatch_group_enter(group)
             dispatch_group_async(group, globalQueue) { () -> Void in
-                networkHelper.getRSSXml(url){(result) ->Void in
-                    feeds.append(result)
+                self.networkHelper.getRSSXml(url){(result) ->Void in
+                    
+                    feedsdata.append(result)
+                    dispatch_group_leave(group)
+                    
                 }
             }
         }
+ 
+        
         
         dispatch_group_notify(group, globalQueue) { () -> Void in
-            for feed in feeds {
+            dispatch_semaphore_signal(notified)
+            NSLog("Finished")
+            NSLog("feed xml count: \(feedsdata.count)")
+            
+            //let imagenotified = dispatch_semaphore_create(0)
+            //let imagegroup = dispatch_group_create()
+            //let imageglobalQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
+            
+            for feed in feedsdata {
                 if !(feed.isEmpty) {
+                    
                     let xml = SWXMLHash.parse(feed)
+                    NSLog("xml item count: \(xml["rss"] ["channel"] ["item"].all.count)")
+                    
                     
                     for item in xml["rss"] ["channel"] ["item"] {
+                        
                         let description = item["description"].element?.text
                         let content = item["content:encoded"].element?.text
                         var imgsrc = ""
@@ -173,33 +228,69 @@ class NewsTableViewController: UITableViewController {
                                 }
                             }
                         }
+                        
+                        if !(imgsrc.isEmpty) {
+                            if let newstitle = item["title"].element!.text, newsurl = item["link"].element!.text, pubdate = item["pubDate"].element!.text {
+                                let news = NewsItem(newstitle: newstitle, newslink: newsurl, newssource: "", newsimage: imgsrc, newsdate: pubdate, newsContent: content!, desc: description!)
+                                self.feedArray.append(news)
+                            }
+                        }
+                        /**
                         var imageData: NSData? = nil
                         
                         if !(imgsrc.isEmpty) {
-                            let imgrequest = Alamofire.request(.GET, imgsrc.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceCharacterSet()))
-                            imgrequest.responseData { response in
-                                if let data = response.data {
-                                    imageData = data
-                                    if let newstitle = item["title"].element!.text, newsurl = item["link"].element!.text, pubdate = item["pubDate"].element!.text {
-                                        let feed = NewsItem(newstitle: newstitle, newslink: newsurl, newssource: "", newsimage: imgsrc, newsdate: pubdate, newsContent: content!, desc: description!, newsimageData: imageData!)
-                                        self.feedArray.append(feed)
+                            dispatch_group_enter(imagegroup)
+                            
+                            dispatch_group_async(imagegroup, imageglobalQueue) { () -> Void in
+                                
+                                let imgrequest = Alamofire.request(.GET, imgsrc.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceCharacterSet()))
+                                imgrequest.responseData { response in
+                                    if let data = response.data {
+                                        imageData = data
+                                        if let newstitle = item["title"].element!.text, newsurl = item["link"].element!.text, pubdate = item["pubDate"].element!.text {
+                                            let feed = NewsItem(newstitle: newstitle, newslink: newsurl, newssource: "", newsimage: imgsrc, newsdate: pubdate, newsContent: content!, desc: description!, newsimageData: imageData!)
+                                            self.feedArray.append(feed)
+                                            
+                                            dispatch_group_leave(imagegroup)
+                                        }
                                         
                                     }
-                                    
                                 }
+                                
                             }
+                            
+                            
+                            
                         }
-                        
+                        **/
                     }
                 }
                 
             }
+            /**
+            dispatch_group_notify(imagegroup, imageglobalQueue) { () -> Void in
+                dispatch_semaphore_signal(imagenotified)
+                NSLog("Image download Finished")
+                
+                
+            }
             
+            dispatch_group_wait(imagegroup, DISPATCH_TIME_FOREVER)
+            dispatch_semaphore_wait(imagenotified, DISPATCH_TIME_FOREVER)
+            **/
+            
+            NSLog("array count: \(self.feedArray.count)")
+            //dispatch_async(dispatch_get_main_queue()){
+            
+            //}
             self.feedArray.sortInPlace({ $0.date!.compare($1.date!) == NSComparisonResult.OrderedDescending })
+            
+            
             dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)) {
                     // print("start setup searchable content")
                 self.setupSearchableContent(self.feedArray)
             }
+            
             self.tableView.reloadData()
                 
                 // self.tableView.setContentOffset(CGPointMake(0, 0 - self.tableView.contentInset.top), animated: true)
@@ -207,6 +298,9 @@ class NewsTableViewController: UITableViewController {
             
             
         }
+        
+        dispatch_group_wait(group, DISPATCH_TIME_FOREVER)
+        dispatch_semaphore_wait(notified, DISPATCH_TIME_FOREVER)
 	}
     
     func setupSearchableContent(feeds: [NewsItem]){
@@ -293,11 +387,21 @@ class NewsTableViewController: UITableViewController {
 	override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
 		let cell = tableView.dequeueReusableCellWithIdentifier("cell", forIndexPath: indexPath) as! NewsCell
 		let item = self.feedArray[indexPath.row]
+        cell.newsTitle.text = ""
 		cell.newsTitle.text = item.title!
 		// cell.newsSource.text = item.source!
-		cell.pubDate.text = item.pubdate!
+		cell.pubDate.text = ""
+        cell.pubDate.text = item.pubdate!
 		cell.newsImage.image = nil
-        cell.newsImage.image = UIImage(data: item.imageData!)
+        if item.imageData != nil {
+            cell.newsImage.image = UIImage(data: item.imageData!)
+        }else{
+            self.networkHelper.getImage(item.image!){(result) ->Void in
+                item.imageData = result
+                cell.newsImage.image = UIImage(data: item.imageData!)
+            }
+        }
+        
 		/*
         if let imagePath = item.image {
 			let imgrequest = Alamofire.request(.GET, imagePath.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceCharacterSet()))
