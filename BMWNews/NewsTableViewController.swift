@@ -61,8 +61,10 @@ class NewsTableViewController: UITableViewController {
             //print("Did select item at index: \(indexPath)")
             self.selMenu = self.seriesItems[indexPath]
             self.feedList = self.feedJson[self.selMenu].arrayValue.map{ $0.string!}
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,0)){
+                self.requestFeeds(self.feedList)
+            }
             
-            self.requestFeeds(self.feedList)
         }
         menuView.cellBackgroundColor = UIColor(red: 0.5, green: 0.5, blue: 0.5, alpha: 1)
         
@@ -202,8 +204,8 @@ class NewsTableViewController: UITableViewController {
         
         dispatch_group_notify(group, globalQueue) { () -> Void in
             //dispatch_semaphore_signal(notified)
-            NSLog("Finished")
-            NSLog("feed xml count: \(feedsdata.count)")
+            //NSLog("Finished")
+            //NSLog("feed xml count: \(feedsdata.count)")
             
             //let imagenotified = dispatch_semaphore_create(0)
             //let imagegroup = dispatch_group_create()
@@ -213,7 +215,7 @@ class NewsTableViewController: UITableViewController {
                 if !(feed.isEmpty) {
                     
                     let xml = SWXMLHash.parse(feed)
-                    NSLog("xml item count: \(xml["rss"] ["channel"] ["item"].all.count)")
+                    //NSLog("xml item count: \(xml["rss"] ["channel"] ["item"].all.count)")
                     
                     
                     for item in xml["rss"] ["channel"] ["item"] {
@@ -280,7 +282,7 @@ class NewsTableViewController: UITableViewController {
             dispatch_semaphore_wait(imagenotified, DISPATCH_TIME_FOREVER)
             **/
             
-            NSLog("array count: \(self.feedArray.count)")
+            //NSLog("array count: \(self.feedArray.count)")
             //dispatch_async(dispatch_get_main_queue()){
             
             //}
