@@ -11,42 +11,36 @@
     "M4"
   ],
   "1 SERIES": [
-    "http://www.bmwblog.com/category/models/bmw-1-series/feed/",
+    "http://www.bmwmotorshowblog.com/en/bmw-1-series/feed/",
     "http://www.bimmerpost.com/1-series/feed/",
     "http://www.bimmerfile.com/section/bmw_models/1-series/feed/"
   ],
   "2 SERIES": [
-    "http://www.bmwblog.com/category/models/2-series/feed/",
+    "http://www.bmwmotorshowblog.com/en/bmw-2-series/feed/",
     "http://www.bimmerpost.com/2-series/feed/",
     "http://www.bimmerfile.com/section/bmw_models/2-series-2/feed/"
   ],
   "3 SERIES": [
-    "http://www.bmwblog.com/category/models/bmw-3-series/feed/",
     "http://www.bimmerfile.com/section/bmw_models/bmw-3-series/feed/",
     "http://www.bimmerpost.com/3-series/feed/"
   ],
   "4 SERIES": [
-    "http://www.bmwblog.com/category/models/bmw-4-series/feed/",
     "http://www.bimmerfile.com/section/bmw_models/4-series/feed/",
     "http://www.bimmerpost.com/4-series/feed/"
   ],
   "1M": [
-    "http://www.bmwblog.com/category/models/1-series-m-coupe/feed/",
     "http://www.bimmerpost.com/1m/feed/",
     "http://www.bimmerfile.com/section/bmw_models/m/1m/feed/"
   ],
   "M2": [
-    "http://www.bmwblog.com/category/models/bmw-m2/feed/",
     "http://www.bimmerfile.com/section/bmw_models/m/m2/feed/",
     "http://www.bimmerpost.com/m2/feed/"
   ],
   "M3": [
-    "http://www.bmwblog.com/category/models/bmw-m3/feed/",
     "http://www.bimmerfile.com/section/bmw_models/m/m3/feed/",
     "http://www.bimmerpost.com/m3/feed/"
   ],
   "M4": [
-    "http://www.bmwblog.com/category/models/bmw-m4/feed/",
     "http://www.bimmerfile.com/section/bmw_models/m/m4/feed/",
     "http://www.bimmerpost.com/m4/feed/"
   ]

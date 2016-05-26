@@ -147,8 +147,9 @@ class NewsTableViewController: UITableViewController {
     
     func requestFeeds(urls: [String]) {
 		self.feedArray.removeAll()
+        self.tableView.reloadData()
         
-        let notified = dispatch_semaphore_create(0)
+        //let notified = dispatch_semaphore_create(0)
         let group = dispatch_group_create()
         let globalQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0)
         
@@ -200,7 +201,7 @@ class NewsTableViewController: UITableViewController {
         
         
         dispatch_group_notify(group, globalQueue) { () -> Void in
-            dispatch_semaphore_signal(notified)
+            //dispatch_semaphore_signal(notified)
             NSLog("Finished")
             NSLog("feed xml count: \(feedsdata.count)")
             
@@ -290,17 +291,17 @@ class NewsTableViewController: UITableViewController {
                     // print("start setup searchable content")
                 self.setupSearchableContent(self.feedArray)
             }
-            
-            self.tableView.reloadData()
-                
+            dispatch_async(dispatch_get_main_queue()){
+                self.tableView.reloadData()
+            }
                 // self.tableView.setContentOffset(CGPointMake(0, 0 - self.tableView.contentInset.top), animated: true)
-                
-            
-            
         }
         
         dispatch_group_wait(group, DISPATCH_TIME_FOREVER)
-        dispatch_semaphore_wait(notified, DISPATCH_TIME_FOREVER)
+        
+        
+        
+        //dispatch_semaphore_wait(notified, DISPATCH_TIME_FOREVER)
 	}
     
     func setupSearchableContent(feeds: [NewsItem]){
@@ -383,6 +384,21 @@ class NewsTableViewController: UITableViewController {
         return feedArray.count
     }
 
+    override func tableView(tableView: UITableView, willDisplayCell cell: UITableViewCell, forRowAtIndexPath indexPath: NSIndexPath) {
+        cell.alpha = 0
+        //let roationTransform = CATransform3DTranslate(CATransform3DIdentity, -500, 10, 0)
+        //cell.layer.transform = roationTransform
+        UIView.animateWithDuration(0.6, animations: {() -> Void in
+            cell.alpha = 1
+            //cell.layer.transform = CATransform3DIdentity
+        })
+        let item = self.feedArray[indexPath.row]
+        if item.imageData == nil {
+            self.networkHelper.getImage(item.image!){(result) ->Void in
+                item.imageData = result
+            }
+        }
+    }
     
 	override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
 		let cell = tableView.dequeueReusableCellWithIdentifier("cell", forIndexPath: indexPath) as! NewsCell

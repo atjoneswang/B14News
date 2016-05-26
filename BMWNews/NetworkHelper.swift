@@ -25,8 +25,10 @@ class NetworkHelper {
     func getRSSXml(url: String, complate:(result: String) -> Void) {
         if let url = NSURL(string: url) {
             NSURLSession.sharedSession().dataTaskWithURL(url){data, response, err in
-                let rss = NSString(data: data!, encoding: NSUTF8StringEncoding)?.description
-                complate(result: rss!)
+                if data != nil {
+                    let rss = NSString(data: data!, encoding: NSUTF8StringEncoding)?.description
+                    complate(result: rss!)
+                }
             }.resume()
         }
     }
